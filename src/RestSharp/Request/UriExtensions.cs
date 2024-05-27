@@ -29,7 +29,7 @@ static class UriExtensions {
                 : throw new ArgumentException("Both BaseUrl and Resource are empty", nameof(resource));
         }
 
-        var usingBaseUri = baseUrl.AbsoluteUri.EndsWith("/") || assembled.IsEmpty() ? baseUrl : new Uri(baseUrl.AbsoluteUri + "/");
+        var usingBaseUri = baseUrl.AbsoluteUri.EndsWith("/") || assembled.IsEmpty() ? baseUrl : new Uri($"{baseUrl.AbsoluteUri}/");
 
         return assembled != null ? new Uri(usingBaseUri, assembled) : baseUrl;
     }
@@ -37,10 +37,18 @@ static class UriExtensions {
     public static Uri AddQueryString(this Uri uri, string? query) {
         if (query == null) return uri;
 
-        var absoluteUri       = uri.AbsoluteUri;
-        var separator = absoluteUri.Contains('?') ? "&" : "?";
+        var absoluteUri = uri.AbsoluteUri;
+        var separator   = absoluteUri.Contains('?') ? "&" : "?";
 
-        return new Uri($"{absoluteUri}{separator}{query}");
+        var result = 
+#if NET6_0_OR_GREATER
+            new Uri($"{absoluteUri}{separator}{query}", new UriCreationOptions{DangerousDisablePathAndQueryCanonicalization = true});
+#else
+#pragma warning disable CS0618 // Type or member is obsolete
+            new Uri($"{absoluteUri}{separator}{query}", false);
+#pragma warning restore CS0618 // Type or member is obsolete
+#endif
+        return result;
     }
 
     public static UrlSegmentParamsValues GetUrlSegmentParamsValues(

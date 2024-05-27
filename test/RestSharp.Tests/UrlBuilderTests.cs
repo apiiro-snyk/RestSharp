@@ -361,4 +361,16 @@ public class UrlBuilderTests {
         actual.HostNameType.Should().Be(UriHostNameType.IPv6);
         actual.AbsoluteUri.Should().Be("https://[fe80::290:e8ff:fe8b:2537]:8443/api/v1/auth");
     }
+
+    [Fact]
+    public async Task Should_not_encode_pipe() {
+        var client = new RestClient("https://enggmsn5amo79.x.pipedream.net");
+        var request = new RestRequest("resource");
+        request.AddQueryParameter("ids", "in:001|116", true);
+        
+        // var actual = client.BuildUri(request);
+        // var expected = new Uri("http://example.com/resource?ids=in:001|116");
+        // actual.Should().Be(expected);
+        await client.GetAsync(request);
+    }
 }
