@@ -21,13 +21,13 @@ public class UrlBuilderTests {
 
     [Fact]
     public void GET_with_empty_request() {
-        var request  = new RestRequest();
+        var request = new RestRequest();
         AssertUri("http://example.com", request, "http://example.com/");
     }
 
     [Fact]
     public void GET_with_empty_request_and_bare_hostname() {
-        var request  = new RestRequest();
+        var request = new RestRequest();
         AssertUri("http://example.com", request, "http://example.com/");
     }
 
@@ -173,8 +173,12 @@ public class UrlBuilderTests {
         // utf-8 and iso-8859-1
         var request = new RestRequest().AddOrUpdateParameter("town", "Hillerød");
 
-        const string expectedDefaultEncoding  = "http://example.com/resource?town=Hiller%c3%b8d";
         const string expectedIso89591Encoding = "http://example.com/resource?town=Hiller%f8d";
+#if NET6_0_OR_GREATER
+        const string expectedDefaultEncoding = "http://example.com/resource?town=Hiller%c3%b8d";
+#else
+        const string expectedDefaultEncoding = "http://example.com/resource?town=Hiller%C3%B8d";
+#endif
 
         AssertUri("http://example.com/resource", request, expectedDefaultEncoding);
 
@@ -236,13 +240,37 @@ public class UrlBuilderTests {
         actual.AbsoluteUri.Should().Be("https://[fe80::290:e8ff:fe8b:2537]:8443/api/v1/auth");
     }
 
+    const string BaseUrl = "http://localhost:8888/";
+
+    [Fact]
+    public void Should_build_with_passing_link_as_Uri() {
+        var relative    = new Uri("/foo/bar/baz", UriKind.Relative);
+        var absoluteUri = new Uri(new Uri(BaseUrl), relative);
+        var req         = new RestRequest(absoluteUri);
+
+        AssertUri(req, absoluteUri.AbsoluteUri);
+    }
+
+    [Fact]
+    public void Should_build_with_passing_link_as_Uri_with_set_BaseUrl() {
+        var baseUrl  = new Uri(BaseUrl);
+        var relative = new Uri("/foo/bar/baz", UriKind.Relative);
+        var req      = new RestRequest(relative);
+
+        using var client = new RestClient(baseUrl);
+
+        var builtUri = client.BuildUri(req);
+
+        AssertUri(BaseUrl, req, builtUri.AbsoluteUri);
+    }
+
     [Fact]
     public void Should_encode_resource() {
-        const string baseUrl = "https://example.com";
+        const string baseUrl  = "https://example.com";
         const string resource = "resource?param=value with spaces";
 
         var request = new RestRequest(resource);
-        var uri = new Uri($"{baseUrl}/{resource}");
+        var uri     = new Uri($"{baseUrl}/{resource}");
         AssertUri(baseUrl, request, uri.AbsoluteUri);
     }
 

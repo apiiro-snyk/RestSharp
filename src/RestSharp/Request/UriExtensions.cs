@@ -18,20 +18,44 @@ using RestSharp.Extensions;
 namespace RestSharp;
 
 static class UriExtensions {
+#if NET6_0_OR_GREATER
+    internal static UriCreationOptions UriOptions = new() { DangerousDisablePathAndQueryCanonicalization = true };
+#endif
+
     public static Uri MergeBaseUrlAndResource(this Uri? baseUrl, string? resource) {
         var assembled = resource;
 
+#if NET6_0_OR_GREATER
+        if (assembled.IsNotEmpty() && assembled.StartsWith('/')) assembled = assembled[1..];
+#else
         if (assembled.IsNotEmpty() && assembled.StartsWith("/")) assembled = assembled.Substring(1);
+#endif
 
         if (baseUrl == null || baseUrl.AbsoluteUri.IsEmpty()) {
             return assembled.IsNotEmpty()
-                ? new Uri(assembled)
+#if NET6_0_OR_GREATER
+                ? new Uri(assembled, UriOptions)
+#else
+                ? new Uri(assembled, false)
+#endif
                 : throw new ArgumentException("Both BaseUrl and Resource are empty", nameof(resource));
         }
 
-        var usingBaseUri = baseUrl.AbsoluteUri.EndsWith("/") || assembled.IsEmpty() ? baseUrl : new Uri($"{baseUrl.AbsoluteUri}/");
+#if NET6_0_OR_GREATER
+        var usingBaseUri = baseUrl.AbsoluteUri.EndsWith('/') || assembled.IsEmpty() ? baseUrl : new Uri($"{baseUrl.AbsoluteUri}/", UriOptions);
 
-        return assembled != null ? new Uri(usingBaseUri, assembled) : baseUrl;
+        var isResourceAbsolute = false;
+        // ReSharper disable once InvertIf
+        if (assembled != null) {
+            var resourceUri = new Uri(assembled, UriKind.RelativeOrAbsolute);
+            isResourceAbsolute = resourceUri.IsAbsoluteUri;
+        }
+
+        return assembled != null ? new Uri(isResourceAbsolute ? assembled : $"{usingBaseUri.AbsoluteUri}{assembled}", UriOptions) : baseUrl;
+#else
+        var usingBaseUri = baseUrl.AbsoluteUri.EndsWith("/") || assembled.IsEmpty() ? baseUrl : new Uri($"{baseUrl.AbsoluteUri}/", false);
+        return assembled != null ? new Uri(usingBaseUri, assembled, false) : baseUrl;
+#endif
     }
 
     public static Uri AddQueryString(this Uri uri, string? query) {
@@ -40,9 +64,9 @@ static class UriExtensions {
         var absoluteUri = uri.AbsoluteUri;
         var separator   = absoluteUri.Contains('?') ? "&" : "?";
 
-        var result = 
+        var result =
 #if NET6_0_OR_GREATER
-            new Uri($"{absoluteUri}{separator}{query}", new UriCreationOptions{DangerousDisablePathAndQueryCanonicalization = true});
+            new Uri($"{absoluteUri}{separator}{query}", new UriCreationOptions { DangerousDisablePathAndQueryCanonicalization = true });
 #else
 #pragma warning disable CS0618 // Type or member is obsolete
             new Uri($"{absoluteUri}{separator}{query}", false);

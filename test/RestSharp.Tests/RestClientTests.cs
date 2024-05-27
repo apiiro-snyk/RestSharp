@@ -33,38 +33,6 @@ public class RestClientTests {
     }
 
     [Fact]
-    public void BuildUri_should_build_with_passing_link_as_Uri() {
-        // arrange
-        var relative    = new Uri("/foo/bar/baz", UriKind.Relative);
-        var absoluteUri = new Uri(new Uri(BaseUrl), relative);
-        var req         = new RestRequest(absoluteUri);
-
-        // act
-        using var client = new RestClient();
-
-        var builtUri = client.BuildUri(req);
-
-        // assert
-        absoluteUri.Should().Be(builtUri);
-    }
-
-    [Fact]
-    public void BuildUri_should_build_with_passing_link_as_Uri_with_set_BaseUrl() {
-        // arrange
-        var baseUrl  = new Uri(BaseUrl);
-        var relative = new Uri("/foo/bar/baz", UriKind.Relative);
-        var req      = new RestRequest(relative);
-
-        // act
-        using var client = new RestClient(baseUrl);
-
-        var builtUri = client.BuildUri(req);
-
-        // assert
-        new Uri(baseUrl, relative).Should().Be(builtUri);
-    }
-
-    [Fact]
     public void UseJson_leaves_only_json_serializer() {
         // arrange
         var baseUrl = new Uri(BaseUrl);

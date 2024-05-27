@@ -20,6 +20,8 @@ public sealed class ResourceStringParametersTests : IDisposable {
         using var client  = new RestClient(_server.Url!);
         var request = new RestRequest(parameters);
 
+        var uri = client.BuildUri(request);
+
         await client.GetAsync(request);
 
         var query = new Uri(url).Query;

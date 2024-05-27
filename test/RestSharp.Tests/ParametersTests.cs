@@ -44,7 +44,7 @@ public class ParametersTests {
         using var client = new RestClient(BaseUrl);
         var       actual = client.BuildUri(request).AbsolutePath;
 
-        expected.Should().BeEquivalentTo(actual);
+        actual.Should().Be(expected);
     }
 
     [Fact]

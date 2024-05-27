@@ -13,6 +13,8 @@
 // limitations under the License.
 
 using System.Net.Http.Headers;
+using System.Text;
+using System.Web;
 
 // ReSharper disable ReplaceSubstringWithRangeIndexer
 // ReSharper disable UnusedAutoPropertyAccessor.Global
@@ -39,35 +41,30 @@ public class RestRequest {
     /// Constructor for a rest request to a relative resource URL and optional method
     /// </summary>
     /// <param name="resource">Resource to use</param>
-    /// <param name="method">Method to use (defaults to Method.Get></param>
+    /// <param name="method">Method to use. Default is Method.Get.</param>
     public RestRequest(string? resource, Method method = Method.Get) : this() {
         Resource = resource ?? "";
-        Method   = method;
+        Method = method;
 
-        if (string.IsNullOrWhiteSpace(resource)) return;
+        if (string.IsNullOrWhiteSpace(resource)) {
+            Resource = "";
+            return;
+        }
 
         var queryStringStart = Resource.IndexOf('?');
 
-        if (queryStringStart < 0 || Resource.IndexOf('=') <= queryStringStart) return;
+        if (queryStringStart < 0 || Resource.IndexOf('=') <= queryStringStart) {
+            return;
+        }
 
-        var queryParams = ParseQuery(Resource.Substring(queryStringStart + 1));
+        var queryString = Resource.Substring(queryStringStart + 1);
         Resource = Resource.Substring(0, queryStringStart);
 
-        foreach (var param in queryParams) this.AddQueryParameter(param.Key, param.Value);
+        var queryParameters = Parsers.ParseQueryString(queryString, Encoding.UTF8);
 
-        return;
-
-        static IEnumerable<KeyValuePair<string, string?>> ParseQuery(string query)
-            => query.Split(new[] { '&' }, StringSplitOptions.RemoveEmptyEntries)
-                .Select(
-                    x => {
-                        var position = x.IndexOf('=');
-
-                        return position > 0
-                            ? new KeyValuePair<string, string?>(x.Substring(0, position), x.Substring(position + 1))
-                            : new KeyValuePair<string, string?>(x, null);
-                    }
-                );
+        foreach (var parameter in queryParameters) {
+            this.AddQueryParameter(parameter.Key, parameter.Value);
+        }
     }
 
     /// <summary>
