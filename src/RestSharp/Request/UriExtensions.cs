@@ -36,7 +36,9 @@ static class UriExtensions {
 #if NET6_0_OR_GREATER
                 ? new Uri(assembled, UriOptions)
 #else
-                ? new Uri(assembled, false)
+#pragma warning disable CS0618 // Type or member is obsolete
+                ? new Uri(assembled, true)
+#pragma warning restore CS0618 // Type or member is obsolete
 #endif
                 : throw new ArgumentException("Both BaseUrl and Resource are empty", nameof(resource));
         }
@@ -53,8 +55,10 @@ static class UriExtensions {
 
         return assembled != null ? new Uri(isResourceAbsolute ? assembled : $"{usingBaseUri.AbsoluteUri}{assembled}", UriOptions) : baseUrl;
 #else
-        var usingBaseUri = baseUrl.AbsoluteUri.EndsWith("/") || assembled.IsEmpty() ? baseUrl : new Uri($"{baseUrl.AbsoluteUri}/", false);
-        return assembled != null ? new Uri(usingBaseUri, assembled, false) : baseUrl;
+#pragma warning disable CS0618 // Type or member is obsolete
+        var usingBaseUri = baseUrl.AbsoluteUri.EndsWith("/") || assembled.IsEmpty() ? baseUrl : new Uri($"{baseUrl.AbsoluteUri}/", true);
+        return assembled != null ? new Uri(usingBaseUri, assembled, true) : baseUrl;
+#pragma warning restore CS0618 // Type or member is obsolete
 #endif
     }
 
@@ -66,10 +70,10 @@ static class UriExtensions {
 
         var result =
 #if NET6_0_OR_GREATER
-            new Uri($"{absoluteUri}{separator}{query}", new UriCreationOptions { DangerousDisablePathAndQueryCanonicalization = true });
+            new Uri($"{absoluteUri}{separator}{query}", UriOptions);
 #else
 #pragma warning disable CS0618 // Type or member is obsolete
-            new Uri($"{absoluteUri}{separator}{query}", false);
+            new Uri($"{absoluteUri}{separator}{query}", true);
 #pragma warning restore CS0618 // Type or member is obsolete
 #endif
         return result;
