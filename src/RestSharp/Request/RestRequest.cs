@@ -12,16 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.Net;
 using System.Net.Http.Headers;
-using RestSharp.Authenticators;
-using RestSharp.Extensions;
-using RestSharp.Interceptors;
 
 // ReSharper disable ReplaceSubstringWithRangeIndexer
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 
 namespace RestSharp;
+
+using Authenticators;
+using Extensions;
+using Interceptors;
 
 /// <summary>
 /// Container for data used to make requests
@@ -53,7 +53,7 @@ public class RestRequest {
         var queryParams = ParseQuery(Resource.Substring(queryStringStart + 1));
         Resource = Resource.Substring(0, queryStringStart);
 
-        foreach (var param in queryParams) this.AddQueryParameter(param.Key, param.Value, false);
+        foreach (var param in queryParams) this.AddQueryParameter(param.Key, param.Value);
 
         return;
 
@@ -84,12 +84,12 @@ public class RestRequest {
     /// Always send a multipart/form-data request - even when no Files are present.
     /// </summary>
     public bool AlwaysMultipartFormData { get; set; }
-    
+
     /// <summary>
     /// Always send a file as request content without multipart/form-data request - even when the request contains only one file parameter
     /// </summary>
     public bool AlwaysSingleFileAsContent { get; set; }
-    
+
     /// <summary>
     /// When set to true, parameter values in a multipart form data requests will be enclosed in
     /// quotation marks. Default is false. Enable it if the remote endpoint requires parameters
@@ -232,7 +232,7 @@ public class RestRequest {
             _advancedResponseHandler = value;
         }
     }
-    
+
     /// <summary>
     /// Request-level interceptors. Will be combined with client-level interceptors if set.
     /// </summary>

@@ -237,6 +237,16 @@ public class UrlBuilderTests {
     }
 
     [Fact]
+    public void Should_encode_resource() {
+        const string baseUrl = "https://example.com";
+        const string resource = "resource?param=value with spaces";
+
+        var request = new RestRequest(resource);
+        var uri = new Uri($"{baseUrl}/{resource}");
+        AssertUri(baseUrl, request, uri.AbsoluteUri);
+    }
+
+    [Fact]
     public void Should_not_encode_pipe() {
         var request = new RestRequest("resource").AddQueryParameter("ids", "in:001|116", false);
         AssertUri("http://example.com/", request, "http://example.com/resource?ids=in:001|116");
