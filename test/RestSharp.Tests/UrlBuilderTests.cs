@@ -363,14 +363,13 @@ public class UrlBuilderTests {
     }
 
     [Fact]
-    public async Task Should_not_encode_pipe() {
-        var client = new RestClient("https://enggmsn5amo79.x.pipedream.net");
+    public void Should_not_encode_pipe() {
+        var client = new RestClient("http://example.com/");
         var request = new RestRequest("resource");
-        request.AddQueryParameter("ids", "in:001|116", true);
+        request.AddQueryParameter("ids", "in:001|116", false);
         
-        // var actual = client.BuildUri(request);
-        // var expected = new Uri("http://example.com/resource?ids=in:001|116");
-        // actual.Should().Be(expected);
-        await client.GetAsync(request);
+        var actual = client.BuildUri(request);
+        var expected = "http://example.com/resource?ids=in:001|116";
+        actual.ToString().Should().Be(expected);
     }
 }
